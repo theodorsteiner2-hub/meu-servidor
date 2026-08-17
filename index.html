@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Web - OpenRouter</title>
+    <title>WhatsApp AI - RealTime</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #111b21; color: #e9edef; height: 100vh; display: flex; justify-content: center; align-items: center; }
@@ -30,7 +30,6 @@
         .message.incoming { background: #fff; border-top-left-radius: 0; }
         .message.outgoing { background: #d9fdd3; border-top-right-radius: 0; }
         .message .time { font-size: 10px; color: #666; float: right; margin-left: 10px; margin-top: 5px; }
-        .message button.delete-btn { background: none; border: none; color: #ff4d4d; font-size: 10px; cursor: pointer; margin-left: 10px; }
 
         .chat-input-area { padding: 10px 20px; background: #202c33; display: flex; align-items: center; gap: 10px; }
         .chat-input-area input[type="text"] { flex: 1; padding: 10px 15px; border-radius: 8px; border: none; background: #2a3942; color: #fff; outline: none; }
@@ -88,11 +87,12 @@
             </div>
         </div>
 
-        <div class="messages-container" id="messagesContainer" style="display:none;"></div>
+        <div class="messages-container" id="messagesContainer"></div>
 
         <div class="ai-suggestions" id="aiSuggestions">
             <div class="suggestion-chip" onclick="usarSugestao('Olá pessoal, tudo bem?')">👋 Olá pessoal</div>
-            <div class="suggestion-chip" onclick="usarSugestao('Pode me ajudar com uma dúvida?')">💡 Tirar dúvida</div>
+            <div class="suggestion-chip" onclick="usarSugestao('Pode me ajudar com uma correção de texto?')">✍️ Corrigir texto</div>
+            <div class="suggestion-chip" onclick="usarSugestao('Me dê dicas de escrita criativa.')">💡 Dicas de escrita</div>
         </div>
 
         <div class="chat-input-area">
@@ -104,47 +104,41 @@
     </div>
 </div>
 
-<script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    // --- CHAVES DO FIREBASE JÁ INCLUÍDAS ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyQgKBcblzkneOqTyt-qpD0U85iqFG076k",
+        authDomain: "chatapp-c7bb1.firebaseapp.com",
+        databaseURL: "https://chatapp-c7bb1-default-rtdb.firebaseio.com",
+        projectId: "chatapp-c7bb1",
+        storageBucket: "chatapp-c7bb1.firebasestorage.app",
+        messagingSenderId: "463389637554",
+        appId: "1:463389637554:web:e2657bc2287391dbc442ab"
+    };
+    // ---------------------------------------------
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const chatRef = ref(db, 'mensagens');
+
     let primeiraMensagemEnviada = false;
 
-    function salvarPerfil() {
+    window.salvarPerfil = function() {
         const name = document.getElementById('userName').value;
         const pic = document.getElementById('userPic').value;
         document.getElementById('myNameDisplay').innerText = name;
         document.getElementById('myPicPreview').src = pic;
+        alert("Perfil salvo!");
     }
 
-    function adicionarMensagem(autor, texto, tipo) {
-        if (!primeiraMensagemEnviada) {
-            document.getElementById('messagesContainer').style.display = 'flex';
-            primeiraMensagemEnviada = true;
-        }
-
-        const container = document.getElementById('messagesContainer');
-        const wrapper = document.createElement('div');
-        wrapper.className = `message-wrapper ${tipo}`;
-        
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${tipo}`;
-        
-        const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        let conteudoHtml = `<b>${autor}</b><br>${texto} <span class="time">${hora}</span>`;
-        if (tipo === 'outgoing') {
-            conteudoHtml += ` <button class="delete-btn" onclick="this.closest('.message-wrapper').remove()">Excluir</button>`;
-        }
-        
-        msgDiv.innerHTML = conteudoHtml;
-        wrapper.appendChild(msgDiv);
-        container.appendChild(wrapper);
-        container.scrollTop = container.scrollHeight;
-    }
-
-    function usarSugestao(texto) {
+    window.usarSugestao = function(texto) {
         document.getElementById('messageInput').value = texto;
     }
 
-    async function enviarMensagem() {
+    window.enviarMensagem = async function() {
         const input = document.getElementById('messageInput');
         const apiKey = document.getElementById('apiKey').value;
         const model = document.getElementById('aiModel').value;
@@ -153,13 +147,12 @@
 
         if (!texto) return;
 
-        adicionarMensagem(nome, texto, 'outgoing');
+        push(chatRef, { autor: nome, texto: texto });
         input.value = '';
 
         if (apiKey) {
             try {
-                const response = "https://openrouter.ai/api/v1/chat/completions";
-                const res = await fetch(response, {
+                const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${apiKey}`,
@@ -168,29 +161,52 @@
                     body: JSON.stringify({
                         "model": model,
                         "messages": [
-                            {"role": "system", "content": "Você é um assistente útil e amigável."},
+                            {"role": "system", "content": "Você é uma IA assistente prestativa em um chat em grupo."},
                             {"role": "user", "content": texto}
                         ]
                     })
                 });
                 const data = await res.json();
                 if (data.choices && data.choices.length > 0) {
-                    adicionarMensagem("IA OpenRouter", data.choices[0].message.content, 'incoming');
+                    const respostaAI = data.choices[0].message.content;
+                    push(chatRef, { autor: "Assistente IA", texto: respostaAI });
                 }
             } catch (e) {
-                console.error("Erro na API");
+                console.error("Erro ao chamar IA");
             }
         }
     }
 
-    function enviarMidia(tipo) {
+    window.enviarMidia = function(tipoMidia) {
         const nome = document.getElementById('userName').value;
-        if (tipo === 'imagem') {
-            adicionarMensagem(nome, "📷 [Imagem enviada]", 'outgoing');
-        } else {
-            adicionarMensagem(nome, "🎤 [Áudio gravado]", 'outgoing');
-        }
+        const texto = tipoMidia === 'imagem' ? "📷 [Imagem enviada]" : "🎤 [Áudio gravado]";
+        push(chatRef, { autor: nome, texto: texto });
     }
+
+    onChildAdded(chatRef, (data) => {
+        if (!primeiraMensagemEnviada) {
+            document.getElementById('messagesContainer').style.display = 'flex';
+            primeiraMensagemEnviada = true;
+        }
+
+        const msg = data.val();
+        const container = document.getElementById('messagesContainer');
+        const wrapper = document.createElement('div');
+        
+        const meuNome = document.getElementById('userName').value;
+        const isMe = msg.autor === meuNome;
+        wrapper.className = `message-wrapper ${isMe ? 'outgoing' : 'incoming'}`;
+        
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${isMe ? 'outgoing' : 'incoming'}`;
+        
+        const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        msgDiv.innerHTML = `<b>${msg.autor}</b><br>${msg.texto} <span class="time">${hora}</span>`;
+        wrapper.appendChild(msgDiv);
+        container.appendChild(wrapper);
+        container.scrollTop = container.scrollHeight;
+    });
 </script>
 
 </body>
