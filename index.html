@@ -2,37 +2,172 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>WhatsApp Real-Time com Lista</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Web Real-Time</title>
     <style>
-        /* Mantive seu estilo e adicionei a lista de contatos */
-        body { background: #111b21; color: #fff; display: flex; height: 100vh; font-family: sans-serif; }
-        .sidebar { width: 300px; background: #202c33; padding: 20px; overflow-y: auto; }
-        .chat-area { flex: 1; display: flex; flex-direction: column; background: #efeae2; }
-        .contact { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #333; cursor: pointer; }
-        .contact img { width: 40px; height: 40px; border-radius: 50%; }
-        #messagesContainer { flex: 1; padding: 20px; overflow-y: auto; color: #000; }
-        .input-area { padding: 20px; display: flex; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; }
+        body { background-color: #0c1317; color: #e9edef; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        
+        .app-container { width: 100%; max-width: 1600px; height: 100vh; background: #222d34; display: flex; position: relative; overflow: hidden; box-shadow: 0 1px 1px 0 rgba(0,0,0,.06),0 2px 5px 0 rgba(0,0,0,.2); }
+        
+        @media (min-width: 1400px) {
+            .app-container { height: 95vh; width: 95vw; border-radius: 0px; }
+        }
+
+        /* Sidebar / Painel Esquerdo */
+        .sidebar { width: 100%; max-width: 400px; background: #111b21; border-right: 1px solid #222d34; display: flex; flex-direction: column; z-index: 2; height: 100%; }
+        .sidebar-header { padding: 10px 16px; background: #202c33; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+        .user-profile { display: flex; align-items: center; gap: 15px; cursor: pointer; }
+        .user-profile img, .contact img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #555; }
+        
+        .sidebar-config-form { padding: 15px; background: #111b21; border-bottom: 1px solid #222d34; display: flex; flex-direction: column; gap: 10px; max-height: 250px; overflow-y: auto; }
+        .form-group { display: flex; flex-direction: column; gap: 3px; }
+        .form-group label { font-size: 11px; color: #00a884; font-weight: bold; }
+        .form-group input, .form-group select { padding: 6px 10px; border-radius: 4px; border: none; background: #2a3942; color: #fff; font-size: 13px; outline: none; }
+        .btn-save { padding: 8px; background: #00a884; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn-save:hover { background: #01755c; }
+
+        .contact-list { flex: 1; overflow-y: auto; background: #111b21; }
+        .contact { display: flex; align-items: center; gap: 15px; padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #222d34; transition: background 0.2s; }
+        .contact:hover { background: #202c33; }
+        .contact-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .contact-name { font-size: 16px; color: #e9edef; }
+        .contact-status { font-size: 13px; color: #8696a0; }
+
+        /* Área de Chat Principal */
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: #efeae2; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); height: 100%; position: relative; }
+        .chat-header { padding: 10px 16px; background: #202c33; color: #fff; display: flex; align-items: center; justify-content: space-between; height: 60px; z-index: 1; }
+        .chat-header-info { display: flex; align-items: center; gap: 15px; }
+        .chat-header-info img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        
+        .messages-container { flex: 1; padding: 20px 7%; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+        .message-wrapper { display: flex; flex-direction: column; max-width: 65%; position: relative; margin-bottom: 2px; }
+        .message-wrapper.incoming { align-self: flex-start; }
+        .message-wrapper.outgoing { align-self: flex-end; }
+        
+        .message { padding: 6px 7px 8px 9px; border-radius: 7.5px; font-size: 14.2px; word-wrap: break-word; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); color: #111; line-height: 19px; position: relative; }
+        .message.incoming { background: #fff; border-top-left-radius: 0; }
+        .message.outgoing { background: #d9fdd3; border-top-right-radius: 0; }
+        .message .author-name { font-size: 12.5px; font-weight: bold; color: #005c4b; margin-bottom: 2px; display: block; }
+        .message .time { font-size: 11px; color: #667781; float: right; margin-left: 15px; margin-top: 4px; line-height: 15px; }
+
+        /* Barra de Entrada / Input */
+        .chat-input-area { padding: 10px 16px; background: #202c33; display: flex; align-items: center; gap: 10px; min-height: 62px; }
+        .chat-input-area input[type="text"] { flex: 1; padding: 12px 16px; border-radius: 8px; border: none; background: #2a3942; color: #fff; outline: none; font-size: 15px; }
+        .chat-input-area input[type="text"]::placeholder { color: #8696a0; }
+        .btn-action { background: none; border: none; color: #8696a0; font-size: 22px; cursor: pointer; padding: 8px; display: flex; align-items: center; justify-content: center; }
+        .btn-action:hover { color: #00a884; }
+
+        /* Responsividade para Celulares */
+        @media (max-width: 768px) {
+            .app-container { flex-direction: column; height: 100vh; width: 100vw; border-radius: 0; }
+            .sidebar { width: 100%; height: 100%; position: absolute; top: 0; left: 0; transition: transform 0.3s ease; z-index: 10; }
+            .sidebar.hidden { transform: translateX(-100%); }
+            .chat-area { width: 100%; height: 100%; }
+            .messages-container { padding: 10px 3%; }
+            .message-wrapper { max-width: 85%; }
+        }
+        
+        .back-to-menu { display: none; background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; margin-right: 5px; }
+        @media (max-width: 768px) {
+            .back-to-menu { display: block; }
+        }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <h3>Seu Perfil</h3>
-    <input type="text" id="userName" placeholder="Seu nome">
-    <button onclick="registrarUsuario()">Entrar/Atualizar</button>
-    <hr style="margin: 20px 0;">
-    <h3>Contatos Online</h3>
-    <div id="contactList"></div>
-</div>
+<div class="app-container">
+    <!-- Painel Lateral (Contatos e Perfil) -->
+    <div class="sidebar" id="sidebarPanel">
+        <div class="sidebar-header">
+            <div class="user-profile">
+                <img id="myPicPreview" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Perfil">
+                <span id="myNameDisplay" style="font-weight: 500; font-size: 16px;">Meu Perfil</span>
+            </div>
+        </div>
 
-<div class="chat-area">
-    <div id="messagesContainer"></div>
-    <div class="input-area">
-        <input type="text" id="messageInput" placeholder="Mensagem...">
-        <button onclick="enviarMensagem()">Enviar</button>
+        <div class="sidebar-config-form">
+            <div class="form-group">
+                <label>Seu Nome</label>
+                <input type="text" id="userName" value="Visitante" placeholder="Seu nome">
+            </div>
+            <div class="form-group">
+                <label>Foto de Perfil (URL)</label>
+                <input type="text" id="userPic" value="https://cdn-icons-png.flaticon.com/512/149/149071.png" placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label>Chave OpenRouter API (Opcional - IA)</label>
+                <input type="password" id="apiKey" placeholder="sk-or-v1-...">
+            </div>
+            <div class="form-group">
+                <label>Modelo da IA</label>
+                <select id="aiModel">
+                    <option value="meta-llama/llama-3-8b-instruct:free">Llama 3 8B (Gratuito)</option>
+                    <option value="deepseek/deepseek-chat">DeepSeek V3</option>
+                </select>
+            </div>
+            <button class="btn-save" onclick="salvarPerfil()">Salvar & Entrar no Chat</button>
+        </div>
+
+        <div style="padding: 10px 15px; font-size: 13px; color: #00a884; font-weight: bold; background: #111b21;">PARTICIPANTES ONLINE</div>
+        <div class="contact-list" id="contactList">
+            <!-- Lista dinâmica de usuários preenchida pelo Firebase -->
+        </div>
+    </div>
+
+    <!-- Área Principal de Conversa -->
+    <div class="chat-area">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <button class="back-to-menu" onclick="toggleSidebar()">⬅</button>
+                <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" alt="Grupo">
+                <div>
+                    <h3 id="chatTitle" style="font-size: 16px; font-weight: 500;">Chat Global & Assistente IA</h3>
+                    <small style="color: #8696a0; font-size: 12px;" id="onlineSub">online</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="messages-container" id="messagesContainer"></div>
+
+        <!-- Input de Mensagens -->
+        <div class="chat-input-area">
+            <button class="btn-action" title="Enviar Mídia" onclick="enviarMidia('imagem')">📎</button>
+            <input type="text" id="messageInput" placeholder="Mensagem" onkeypress="if(event.key === 'Enter') enviarMensagem()">
+            <button class="btn-action" title="Enviar Áudio" onclick="enviarMidia('audio')">🎤</button>
+            <button class="btn-action" title="Enviar" onclick="enviarMensagem()" style="color: #00a884; font-size: 24px;">➤</button>
+        </div>
     </div>
 </div>
 
+<!-- Som de notificação do WhatsApp via Web Audio API (Não precisa de arquivo externo) -->
+<script>
+    function tocarSomNotificacao() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.15);
+        } catch (e) {
+            console.log("Áudio bloqueado pelo navegador até haver interação.");
+        }
+    }
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebarPanel');
+        sidebar.classList.toggle('hidden');
+    }
+</script>
+
+<!-- Lógica Firebase e OpenRouter -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, push, onChildAdded, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -49,47 +184,132 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    
-    // Referências
     const chatRef = ref(db, 'mensagens');
     const usersRef = ref(db, 'usuarios');
 
-    // 1. Registrar usuário no Firebase (para aparecer na lista)
-    window.registrarUsuario = () => {
-        const nome = document.getElementById('userName').value;
-        if (!nome) return alert("Digite um nome!");
-        
-        // Salva o usuário no banco (usando o nome como ID simples)
-        set(ref(db, 'usuarios/' + nome), {
-            nome: nome,
-            status: "Online"
-        });
-        alert("Você entrou no chat!");
-    };
+    let primeiraMensagemCarregada = false;
 
-    // 2. Ouvir novos usuários e atualizar a lista
+    window.salvarPerfil = function() {
+        const name = document.getElementById('userName').value.trim();
+        const pic = document.getElementById('userPic').value.trim();
+        if (!name) {
+            alert("Por favor, insira um nome.");
+            return;
+        }
+        document.getElementById('myNameDisplay').innerText = name;
+        if(pic) document.getElementById('myPicPreview').src = pic;
+
+        // Salva ou atualiza o usuário no banco de dados
+        set(ref(db, 'usuarios/' + name), {
+            nome: name,
+            foto: pic || "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+        });
+
+        alert("Perfil salvo com sucesso!");
+        if (window.innerWidth <= 768) {
+            toggleSidebar();
+        }
+    }
+
+    window.enviarMensagem = async function() {
+        const input = document.getElementById('messageInput');
+        const apiKey = document.getElementById('apiKey').value.trim();
+        const model = document.getElementById('aiModel').value;
+        const nome = document.getElementById('userName').value.trim() || "Visitante";
+        const texto = input.value.trim();
+
+        if (!texto) return;
+
+        // Envia mensagem do usuário para o Firebase
+        push(chatRef, { autor: nome, texto: texto });
+        input.value = '';
+
+        // Se houver chave do OpenRouter configurada, a IA responde inteligentemente
+        if (apiKey) {
+            try {
+                const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${apiKey}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        "model": model,
+                        "messages": [
+                            {"role": "system", "content": "Você é um assistente inteligente integrado em um chat em estilo WhatsApp. Responda de forma natural, prestativa, ajude com correções textuais se solicitado e dê sugestões claras."},
+                            {"role": "user", "content": texto}
+                        ]
+                    })
+                });
+                const data = await res.json();
+                if (data.choices && data.choices.length > 0) {
+                    const respostaAI = data.choices[0].message.content;
+                    push(chatRef, { autor: "Assistente IA", texto: respostaAI });
+                }
+            } catch (e) {
+                console.error("Erro ao chamar IA OpenRouter");
+            }
+        }
+    }
+
+    window.enviarMidia = function(tipo) {
+        const nome = document.getElementById('userName').value.trim() || "Visitante";
+        const texto = tipo === 'imagem' ? "📷 [Imagem enviada]" : "🎤 [Mensagem de áudio]";
+        push(chatRef, { autor: nome, texto: texto });
+    }
+
+    // Monitora novos usuários em tempo real para exibir na lista lateral
     onChildAdded(usersRef, (data) => {
         const user = data.val();
         const list = document.getElementById('contactList');
+        // Evita duplicar se já estiver na lista
+        if (document.getElementById('user-item-' + user.nome)) return;
+        
         const div = document.createElement('div');
         div.className = 'contact';
-        div.innerHTML = `<img src="https://ui-avatars.com/api/?name=${user.nome}"> <span>${user.nome}</span>`;
+        div.id = 'user-item-' + user.nome;
+        div.innerHTML = `
+            <img src="${user.foto || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" alt="Foto">
+            <div class="contact-info">
+                <span class="contact-name">${user.nome}</span>
+                <span class="contact-status">Online</span>
+            </div>
+        `;
         list.appendChild(div);
     });
 
-    // 3. Enviar mensagem
-    window.enviarMensagem = () => {
-        const nome = document.getElementById('userName').value || "Anônimo";
-        const input = document.getElementById('messageInput');
-        push(chatRef, { autor: nome, texto: input.value });
-        input.value = '';
-    };
-
-    // 4. Receber mensagens
+    // Monitora mensagens em tempo real em todos os aparelhos conectados
     onChildAdded(chatRef, (data) => {
         const msg = data.val();
         const container = document.getElementById('messagesContainer');
-        container.innerHTML += `<div><b>${msg.autor}:</b> ${msg.texto}</div>`;
+        const wrapper = document.createElement('div');
+        
+        const meuNome = document.getElementById('userName').value.trim();
+        const isMe = msg.autor === meuNome;
+        
+        wrapper.className = `message-wrapper ${isMe ? 'outgoing' : 'incoming'}`;
+        
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${isMe ? 'outgoing' : 'incoming'}`;
+        
+        const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        let conteudo = "";
+        if (!isMe) {
+            conteudo += `<span class="author-name">${msg.autor}</span>`;
+        }
+        conteudo += `${msg.texto} <span class="time">${hora}</span>`;
+        
+        msgDiv.innerHTML = conteudo;
+        wrapper.appendChild(msgDiv);
+        container.appendChild(wrapper);
+        container.scrollTop = container.scrollHeight;
+
+        // Toca o som de notificação se a mensagem veio de outra pessoa
+        if (primeiraMensagemCarregada && !isMe) {
+            tocarSomNotificacao();
+        }
+        primeiraMensagemCarregada = true;
     });
 </script>
 
