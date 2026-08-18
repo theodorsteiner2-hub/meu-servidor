@@ -3,495 +3,1518 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>whatTHEO - Chat Global & IA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>whatTHEO — Chat Global & IA</title>
     <style>
         :root {
-            --bg-main: #0c1317;
-            --bg-sidebar: #111b21;
-            --bg-header: #202c33;
-            --bg-input: #2a3942;
-            --chat-bg: #efeae2;
-            --msg-out: #d9fdd3;
-            --msg-in: #ffffff;
-            --msg-ai: #f0f2f5;
-            --text-primary: #e9edef;
-            --text-secondary: #8696a0;
-            --accent: #00a884;
-            --accent-hover: #008f72;
-            --danger: #f15c6d;
-            --border: #222d34;
+            --bg-main: #09090b;
+            --bg-sidebar: #121216;
+            --bg-card: #18181b;
+            --bg-input: #27272a;
+            --border: #27272a;
+            --primary: #9333ea;
+            --primary-hover: #7e22ce;
+            --primary-glow: rgba(147, 51, 234, 0.15);
+            --text-main: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --accent-green: #22c55e;
+            --msg-user: #7e22ce;
+            --msg-ai: #18181b;
+            --danger: #ef4444;
+            --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; }
-        body { background-color: var(--bg-main); color: var(--text-primary); height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        .app-container { width: 100%; max-width: 1600px; height: 100vh; background: var(--bg-sidebar); display: flex; position: relative; overflow: hidden; box-shadow: 0 1px 1px 0 rgba(0,0,0,.06), 0 2px 5px 0 rgba(0,0,0,.2); }
-        @media (min-width: 1400px) { .app-container { height: 95vh; width: 95vw; border-radius: 8px; border: 1px solid var(--border); } }
-        
-        .sidebar { width: 100%; max-width: 420px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; height: 100%; transition: transform 0.3s ease; }
-        .sidebar-header { padding: 10px 16px; background: var(--bg-header); display: flex; align-items: center; justify-content: space-between; height: 64px; }
-        .user-profile { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-        .user-profile img, .chat-header-info img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #555; }
-        .user-info-text h4 { font-size: 15px; font-weight: 500; color: var(--text-primary); }
-        .user-info-text span { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; }
-        .user-info-text span::before { content: ''; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; display: inline-block; }
-        .sidebar-config-form { padding: 16px; background: var(--bg-sidebar); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-height: calc(100vh - 64px); }
-        .form-group { display: flex; flex-direction: column; gap: 4px; }
-        .form-group label { font-size: 11px; color: var(--accent); font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
-        .form-group input, .form-group select { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-primary); font-size: 14px; outline: none; transition: border-color 0.2s; }
-        .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
-        .badge-ai { display: inline-flex; align-items: center; gap: 6px; background: rgba(0, 168, 132, 0.1); padding: 4px 8px; border-radius: 4px; color: var(--accent); font-size: 12px; font-weight: 600; width: fit-content; }
-        .btn-save { padding: 10px; background: var(--accent); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; transition: background 0.2s; margin-top: 4px; }
-        .btn-save:hover { background: var(--accent-hover); }
-        .sidebar-footer-info { padding: 12px 16px; background: var(--bg-sidebar); border-top: 1px solid var(--border); font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center; }
 
-        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--chat-bg); background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); height: 100%; position: relative; }
-        .chat-header { padding: 10px 16px; background: var(--bg-header); color: var(--text-primary); display: flex; align-items: center; justify-content: space-between; height: 64px; z-index: 2; border-bottom: 1px solid var(--border); }
-        .chat-header-info { display: flex; align-items: center; gap: 12px; }
-        .chat-header-details h3 { font-size: 16px; font-weight: 500; }
-        .chat-header-details small { color: var(--text-secondary); font-size: 12px; }
-        .chat-actions-toolbar { display: flex; gap: 8px; }
-        .tool-btn { background: var(--bg-input); border: none; color: var(--text-primary); padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: background 0.2s; }
-        .tool-btn:hover { background: rgba(255,255,255,0.1); }
-        
-        .messages-container { flex: 1; padding: 20px 7%; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
-        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #54656f; text-align: center; gap: 12px; }
-        .empty-state span { font-size: 48px; }
-        .empty-state h3 { font-weight: 400; font-size: 22px; color: #3b4a54; }
-        .empty-state p { font-size: 14px; max-width: 400px; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font);
+        }
 
-        .message-wrapper { display: flex; flex-direction: column; max-width: 65%; position: relative; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-        .message-wrapper.incoming { align-self: flex-start; }
-        .message-wrapper.outgoing { align-self: flex-end; }
-        .message-wrapper.ai-message { align-self: flex-start; max-width: 75%; }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            height: 100dvh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-        .message { padding: 8px 10px 8px 12px; border-radius: 8px; font-size: 14.2px; word-wrap: break-word; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); color: #111; line-height: 19px; position: relative; }
-        .message.incoming { background: var(--msg-in); border-top-left-radius: 0; }
-        .message.outgoing { background: var(--msg-out); border-top-right-radius: 0; }
-        .message.ai { background: var(--msg-ai); border-top-left-radius: 0; border: 1px solid #d1d7db; }
-        .message .author-name { font-size: 12.5px; font-weight: bold; color: #005c4b; margin-bottom: 2px; display: block; }
-        .message.ai .author-name { color: #027eb5; display: flex; align-items: center; gap: 4px; }
-        .message img.msg-img { max-width: 100%; border-radius: 6px; margin-bottom: 4px; cursor: pointer; }
-        .message audio { width: 100%; height: 32px; margin-top: 4px; }
-        .message .time { font-size: 11px; color: #667781; float: right; margin-left: 15px; margin-top: 4px; line-height: 15px; }
+        .app-container {
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr) 320px;
+            height: 100dvh;
+            width: 100vw;
+            background: var(--bg-main);
+            overflow: hidden;
+        }
 
-        .suggestions-bar { padding: 8px 16px; background: rgba(32, 44, 51, 0.85); display: flex; gap: 8px; overflow-x: auto; white-space: nowrap; border-top: 1px solid var(--border); z-index: 2; scrollbar-width: none; }
-        .suggestions-bar::-webkit-scrollbar { display: none; }
-        .chip { background: var(--bg-input); color: var(--text-primary); border: none; padding: 6px 12px; border-radius: 16px; font-size: 12px; cursor: pointer; transition: background 0.2s, transform 0.1s; display: inline-flex; align-items: center; gap: 4px; }
-        .chip:hover { background: var(--accent); color: #fff; }
+        /* SIDEBAR ESQUERDA */
+        .sidebar {
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: 100dvh;
+            z-index: 10;
+            transition: transform 0.3s ease;
+        }
 
-        .chat-input-area { padding: 10px 16px; background: var(--bg-header); display: flex; align-items: center; gap: 10px; min-height: 62px; z-index: 2; border-top: 1px solid var(--border); }
-        .chat-input-area input[type="text"] { flex: 1; padding: 12px 16px; border-radius: 8px; border: none; background: var(--bg-input); color: var(--text-primary); outline: none; font-size: 15px; }
-        .chat-input-area input[type="text"]::placeholder { color: var(--text-secondary); }
-        .btn-action { background: none; border: none; color: var(--text-secondary); font-size: 20px; cursor: pointer; padding: 8px; display: flex; align-items: center; justify-content: center; transition: color 0.2s; }
-        .btn-action:hover { color: var(--text-primary); }
-        .btn-action.active-record { color: var(--danger); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .sidebar-header {
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
 
-        .typing-indicator-box { padding: 6px 16px; font-size: 12px; color: var(--text-secondary); background: rgba(32, 44, 51, 0.6); display: none; align-items: center; gap: 6px; }
-        .dots span { animation: blink 1.4s infinite both; height: 5px; width: 5px; background-color: var(--text-secondary); border-radius: 50%; display: inline-block; margin: 0 1px; }
-        .dots span:nth-child(2) { animation-delay: .2s; }
-        .dots span:nth-child(3) { animation-delay: .4s; }
-        @keyframes blink { 0% { opacity: .2; } 20% { opacity: 1; } 100% { opacity: .2; } }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-        .toast { background: var(--bg-header); color: var(--text-primary); padding: 10px 16px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 13px; border-left: 4px solid var(--accent); opacity: 0; transform: translateY(10px); animation: toastIn 0.3s forwards; pointer-events: auto; }
-        @keyframes toastIn { to { opacity: 1; transform: translateY(0); } }
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary), #c084fc);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 14px;
+        }
 
-        .menu-toggle { display: none; background: none; border: none; color: var(--text-primary); font-size: 20px; cursor: pointer; }
+        .logo-text h1 {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .logo-text span {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        .sidebar-search {
+            padding: 12px 16px;
+        }
+
+        .sidebar-search input {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: var(--text-main);
+            font-size: 12px;
+            outline: none;
+        }
+
+        .sidebar-search input:focus {
+            border-color: var(--primary);
+        }
+
+        .sidebar-actions {
+            padding: 0 16px 12px 16px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-new-chat {
+            flex: 1;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        .btn-new-chat:hover {
+            background: var(--primary-hover);
+        }
+
+        .rooms-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .room-category-title {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            padding: 8px 8px 4px 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .room-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .room-item:hover {
+            background: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        .room-item.active {
+            background: var(--primary-glow);
+            color: var(--text-main);
+            border-left: 3px solid var(--primary);
+        }
+
+        .room-delete {
+            opacity: 0;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .room-item:hover .room-delete {
+            opacity: 1;
+        }
+
+        .room-delete:hover {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .sidebar-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-footer-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-tool-sm {
+            flex: 1;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            padding: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-tool-sm:hover {
+            color: var(--text-main);
+            border-color: var(--text-secondary);
+        }
+
+        /* ÁREA CENTRAL DO CHAT */
+        .chat-main {
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr) auto;
+            height: 100dvh;
+            background: var(--bg-main);
+            position: relative;
+            min-width: 0;
+        }
+
+        .chat-header {
+            padding: 12px 20px;
+            background: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 5;
+        }
+
+        .chat-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .chat-title-info h2 {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .chat-title-info span {
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-green);
+        }
+
+        .status-dot.offline { background: var(--danger); }
+        .status-dot.thinking { background: #eab308; animation: pulse 1s infinite; }
+
+        @keyframes pulse {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+
+        .chat-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            color: var(--text-main);
+            border-color: var(--text-secondary);
+        }
+
+        /* ÁREA DE MENSAGENS COM SCROLL */
+        .chat-messages-wrapper {
+            position: relative;
+            height: 100%;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scroll-behavior: smooth;
+        }
+
+        .scroll-down-btn {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: none;
+            align-items: center;
+            gap: 6px;
+            z-index: 4;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, 10px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+
+        .message-group {
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+            position: relative;
+            gap: 4px;
+        }
+
+        .message-group.user {
+            align-self: flex-end;
+        }
+
+        .message-group.ai {
+            align-self: flex-start;
+        }
+
+        .message-header-info {
+            font-size: 10px;
+            color: var(--text-secondary);
+            padding: 0 4px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .message-bubble {
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            line-height: 1.5;
+            word-break: break-word;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .message-group.user .message-bubble {
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .message-group.ai .message-bubble {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-bottom-left-radius: 2px;
+        }
+
+        .message-actions {
+            position: absolute;
+            top: -10px;
+            right: 4px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            display: none;
+            gap: 2px;
+            padding: 2px;
+            z-index: 2;
+        }
+
+        .message-group:hover .message-actions {
+            display: flex;
+        }
+
+        .msg-action-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 11px;
+            padding: 2px 6px;
+            cursor: pointer;
+            border-radius: 2px;
+        }
+
+        .msg-action-btn:hover {
+            background: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        .highlight-search {
+            background: rgba(234, 179, 8, 0.4);
+            color: inherit;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        /* COMPOSER FIXO */
+        .chat-composer {
+            padding: 12px 20px;
+            background: var(--bg-sidebar);
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .composer-toolbar {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .composer-toolbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .smart-action-chip {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .smart-action-chip:hover {
+            color: var(--text-main);
+            border-color: var(--primary);
+            background: var(--primary-glow);
+        }
+
+        .composer-input-box {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            transition: border-color 0.2s;
+        }
+
+        .composer-input-box:focus-within {
+            border-color: var(--primary);
+        }
+
+        .composer-textarea {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 13.5px;
+            outline: none;
+            resize: none;
+            max-height: 120px;
+            min-height: 20px;
+            line-height: 20px;
+        }
+
+        .composer-textarea::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn-composer-action {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+
+        .btn-composer-action:hover {
+            color: var(--text-main);
+        }
+
+        .btn-composer-action.recording {
+            color: var(--danger);
+            animation: pulse 1s infinite;
+        }
+
+        .btn-send {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-send:hover {
+            background: var(--primary-hover);
+        }
+
+        /* SIDEBAR DIREITA */
+        .right-sidebar {
+            background: var(--bg-sidebar);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: 100dvh;
+            padding: 16px;
+            gap: 16px;
+            overflow-y: auto;
+        }
+
+        .right-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .right-card h3 {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .ai-status-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .metric-box {
+            background: var(--bg-input);
+            padding: 8px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        .tools-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .tool-btn {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .tool-btn:hover {
+            border-color: var(--primary);
+            background: var(--primary-glow);
+        }
+
+        /* MODAL DE CONFIGURAÇÕES */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100dvh;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            width: 100%;
+            max-width: 440px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .form-group input {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: var(--text-main);
+            font-size: 13px;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .btn-secondary {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        /* RESPONSIVIDADE */
+        @media (max-width: 1024px) {
+            .app-container {
+                grid-template-columns: 260px minmax(0, 1fr);
+            }
+            .right-sidebar {
+                display: none;
+            }
+        }
+
         @media (max-width: 768px) {
-            .app-container { flex-direction: column; height: 100vh; width: 100vw; border-radius: 0; }
-            .sidebar { position: absolute; top: 0; left: 0; width: 100%; max-width: 100%; transform: translateX(-100%); }
-            .sidebar.mobile-open { transform: translateX(0); }
-            .menu-toggle { display: block; }
-            .chat-area { width: 100%; height: 100%; }
+            .app-container {
+                grid-template-columns: 100vw;
+            }
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 280px;
+                transform: translateX(-100%);
+                z-index: 50;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .mobile-menu-btn {
+                display: flex;
+            }
         }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
     </style>
 </head>
 <body>
+
 <div class="app-container">
-    <div class="sidebar" id="sidebarPanel">
+    <!-- SIDEBAR ESQUERDA -->
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="user-profile" onclick="toggleSidebarMobile()">
-                <img id="myPicPreview" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Perfil">
-                <div class="user-info-text">
-                    <h4 id="myNameDisplay">Theo</h4>
-                    <span>Online</span>
+            <div class="logo-area">
+                <div class="logo-icon">tT</div>
+                <div class="logo-text">
+                    <h1>whatTHEO</h1>
+                    <span>Chat Global & IA</span>
                 </div>
             </div>
-            <button class="menu-toggle" onclick="toggleSidebarMobile()" aria-label="Fechar menu">✕</button>
+            <button class="btn-icon mobile-menu-btn" onclick="toggleSidebar(false)">✕</button>
         </div>
-        <div class="sidebar-config-form">
-            <div class="form-group">
-                <label for="userName">Seu Nome</label>
-                <input type="text" id="userName" value="Theo" placeholder="Digite seu nome">
-            </div>
-            <div class="form-group">
-                <label for="userPic">Foto de Perfil (URL)</label>
-                <input type="text" id="userPic" value="https://cdn-icons-png.flaticon.com/512/149/149071.png" placeholder="https://...">
-            </div>
-            <div class="form-group">
-                <label for="aiModel">Modelo da IA</label>
-                <select id="aiModel">
-                    <option value="meta-llama/llama-3.1-8b-instruct">Llama 3.1 8B Instruct</option>
-                    <option value="deepseek/deepseek-chat">DeepSeek V3</option>
-                    <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="apiKey">OpenRouter API Key</label>
-                <input type="password" id="apiKey" placeholder="sk-or-v1-...">
-            </div>
-            <div class="badge-ai" id="aiStatusBadge">
-                ● whatTHEO IA: Pronto
-            </div>
-            <button class="btn-save" onclick="salvarPerfil()">Salvar Configurações</button>
-        </div>
-        <div class="sidebar-footer-info">
-            <span>whatTHEO RealTime</span>
-            <span>v2.6 Pro</span>
-        </div>
-    </div>
 
-    <div class="chat-area">
-        <div class="chat-header">
-            <div class="chat-header-info">
-                <button class="menu-toggle" onclick="toggleSidebarMobile()" aria-label="Abrir menu">☰</button>
-                <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" alt="whatTHEO Avatar">
-                <div class="chat-header-details">
-                    <h3 id="chatTitle">whatTHEO - Chat Global & IA</h3>
-                    <small id="onlineSub">Sincronizado • <span id="onlineCount">1</span> online</small>
+        <div class="sidebar-search">
+            <input type="text" id="globalSearchInput" placeholder="Pesquisar mensagens (Ctrl+K)..." oninput="handleGlobalSearch(this.value)">
+        </div>
+
+        <div class="sidebar-actions">
+            <button class="btn-new-chat" onclick="createNewConversation()">
+                <span>+</span> Nova Conversa
+            </button>
+        </div>
+
+        <div class="room-category-title">Salas & Conversas</div>
+        <div class="rooms-list" id="roomsList">
+            <!-- Preenchido via JS -->
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-footer-btns">
+                <button class="btn-tool-sm" onclick="exportConversation('json')">📥 Exportar</button>
+                <button class="btn-tool-sm" onclick="confirmClearConversation()">🗑️ Limpar</button>
+                <button class="btn-tool-sm" onclick="openSettingsModal()">⚙️ Config</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ÁREA CENTRAL DO CHAT -->
+    <main class="chat-main">
+        <header class="chat-header">
+            <div class="chat-header-left">
+                <button class="mobile-menu-btn" onclick="toggleSidebar(true)">☰</button>
+                <div class="chat-title-info">
+                    <h2 id="currentChatTitle">Global</h2>
+                    <span><div class="status-dot" id="headerStatusDot"></div> <span id="headerStatusText">whatTHEO IA Pronta</span></span>
                 </div>
             </div>
-            <div class="chat-actions-toolbar">
-                <button class="tool-btn" onclick="executarAcaoRapida('resumir')">🧠 Resumir</button>
-                <button class="tool-btn" onclick="executarAcaoRapida('perguntar')">🤖 Chamar whatTHEO</button>
+            <div class="chat-header-right">
+                <button class="btn-icon" title="Configurações" onclick="openSettingsModal()">⚙️</button>
+            </div>
+        </header>
+
+        <div class="chat-messages-wrapper" id="messagesWrapper">
+            <div class="chat-messages" id="chatMessages">
+                <!-- Mensagens renderizadas via JS -->
+            </div>
+            <button class="scroll-down-btn" id="scrollDownBtn" onclick="scrollToBottom(true)">
+                ↓ Novas mensagens
+            </button>
+        </div>
+
+        <div class="chat-composer">
+            <div class="composer-toolbar">
+                <button class="smart-action-chip" onclick="insertSmartAction('Analisar conversa')">📊 Analisar conversa</button>
+                <button class="smart-action-chip" onclick="insertSmartAction('Resumir')">📝 Resumir</button>
+                <button class="smart-action-chip" onclick="insertSmartAction('Melhorar texto')">✍️ Melhorar texto</button>
+                <button class="smart-action-chip" onclick="insertSmartAction('Criar ideias')">💡 Criar ideias</button>
+                <button class="smart-action-chip" onclick="insertSmartAction('Plano de ação')">🎯 Plano de ação</button>
+            </div>
+            <div class="composer-input-box">
+                <button class="btn-composer-action" title="Anexo" onclick="triggerAttachment()">📎</button>
+                <input type="file" id="hiddenFileInput" style="display:none" onchange="handleFileSelected(this)">
+                <textarea class="composer-textarea" id="messageInput" placeholder="Escreva uma mensagem ou use @whatTHEO..." rows="1" oninput="autoResizeTextarea(this)" onkeydown="handleKeydown(event)"></textarea>
+                <button class="btn-composer-action" id="micBtn" title="Reconhecimento de Voz" onclick="toggleVoiceRecording()">🎤</button>
+                <button class="btn-send" title="Enviar" onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- SIDEBAR DIREITA -->
+    <aside class="right-sidebar">
+        <div class="right-card">
+            <h3>whatTHEO IA</h3>
+            <div class="ai-status-row">
+                <div class="status-dot" id="rightStatusDot"></div>
+                <span id="rightStatusLabel">IA Conectada</span>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-box">
+                    <span class="metric-value" id="msgCountMetric">0</span>
+                    <span class="metric-label">Mensagens</span>
+                </div>
+                <div class="metric-box">
+                    <span class="metric-value" id="aiCountMetric">0</span>
+                    <span class="metric-label">Respostas IA</span>
+                </div>
             </div>
         </div>
 
-        <div class="messages-container" id="messagesContainer">
-            <div class="empty-state" id="emptyState">
-                <span>🤖</span>
-                <h3>whatTHEO Chat Ativado</h3>
-                <p>Converse livremente, envie imagens ou digite <strong>@whatTHEO</strong> para acionar o assistente.</p>
+        <div class="right-card">
+            <h3>Ferramentas Rápidas</h3>
+            <div class="tools-list">
+                <button class="tool-btn" onclick="runAiTool('Resuma os pontos principais desta conversa.')"><span>📝 Resumo Executivo</span> ➔</button>
+                <button class="tool-btn" onclick="runAiTool('Extraia decisões tomadas nesta conversa.')"><span>📌 Extrair Decisões</span> ➔</button>
+                <button class="tool-btn" onclick="runAiTool('Faça uma crítica objetiva e construtiva da conversa.')"><span>🔍 Crítica Objetiva</span> ➔</button>
+                <button class="tool-btn" onclick="runAiTool('Crie alternativas criativas para os tópicos discutidos.')"><span>✨ Criar Alternativas</span> ➔</button>
             </div>
         </div>
 
-        <div class="typing-indicator-box" id="typingIndicator">
-            <span id="typingText">whatTHEO está digitando</span>
-            <div class="dots"><span></span><span></span><span></span></div>
+        <div class="right-card" style="flex:1;">
+            <h3>Sessão & Conexão</h3>
+            <div style="font-size: 11px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 6px;">
+                <div>Modelo: <strong id="lblModelName" style="color:var(--text-main);">Demo Mode</strong></div>
+                <div>Armazenamento: <strong style="color:var(--text-main);">Localstorage (v6)</strong></div>
+                <div>Modo: <strong id="lblModeStatus" style="color:var(--accent-green);">Demonstração Local</strong></div>
+            </div>
         </div>
+    </aside>
+</div>
 
-        <div class="suggestions-bar">
-            <button class="chip" onclick="inserirSugestao('👋 Olá whatTHEO!')">👋 Olá whatTHEO</button>
-            <button class="chip" onclick="executarAcaoRapida('perguntar')">🤖 Perguntar ao whatTHEO</button>
-            <button class="chip" onclick="executarAcaoRapida('resumir')">🧠 Resumir conversa</button>
-            <button class="chip" onclick="executarAcaoRapida('melhorar')">✍️ Melhorar meu texto</button>
-            <button class="chip" onclick="executarAcaoRapida('ideia')">💡 Gerar ideia</button>
+<!-- MODAL DE CONFIGURAÇÕES -->
+<div class="modal-overlay" id="settingsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Configurações do whatTHEO</h3>
+            <button class="btn-icon" onclick="closeSettingsModal()">✕</button>
         </div>
-
-        <div class="chat-input-area">
-            <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="tratarImagem(this)">
-            <button class="btn-action" title="Enviar Imagem" onclick="document.getElementById('imageInput').click()">📷</button>
-            <button class="btn-action" id="audioBtn" title="Gravar Áudio" onclick="toggleGravacaoAudio()">🎤</button>
-            <input type="text" id="messageInput" placeholder="Digite uma mensagem (use @whatTHEO para chamar o assistente)..." onkeypress="if(event.key === 'Enter') enviarMensagem()">
-            <button class="btn-action" title="Enviar" onclick="enviarMensagem()" style="color: var(--accent); font-size: 22px;">➤</button>
+        <div class="form-group">
+            <label>Nome do Usuário</label>
+            <input type="text" id="configUserName" placeholder="Seu nome">
+        </div>
+        <div class="form-group">
+            <label>Endpoint da IA (API Backend URL)</label>
+            <input type="text" id="configEndpoint" placeholder="https://api.exemplo.com/v1/chat">
+        </div>
+        <div class="form-group">
+            <label>Modelo de IA</label>
+            <input type="text" id="configModel" placeholder="gpt-4o, llama-3, etc.">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeSettingsModal()">Cancelar</button>
+            <button class="btn-primary" onclick="saveSettings()">Salvar Configurações</button>
         </div>
     </div>
 </div>
 
-<div id="toast-container"></div>
+<script>
+    /* ==========================================
+       ESTADO E LOCALSTORAGE (whatTHEO_v6)
+       ========================================== */
+    const STORAGE_KEY = 'whatTHEO_v6';
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyQgKBcblzkneOqTyt-qpD0U85iqFG076k",
-        authDomain: "chatapp-c7bb1.firebaseapp.com",
-        databaseURL: "https://chatapp-c7bb1-default-rtdb.firebaseio.com",
-        projectId: "chatapp-c7bb1",
-        storageBucket: "chatapp-c7bb1.firebasestorage.app",
-        messagingSenderId: "463389637554",
-        appId: "1:463389637554:web:e2657bc2287391dbc442ab"
+    let appState = {
+        userName: 'Usuário',
+        apiEndpoint: '',
+        aiModel: 'whatTHEO-Local-Demo',
+        currentConversationId: 'global',
+        conversations: {
+            'global': { id: 'global', title: 'Global', category: 'Salas' },
+            'ideias': { id: 'ideias', title: 'Ideias', category: 'Salas' },
+            'tecnologia': { id: 'tecnologia', title: 'Tecnologia', category: 'Salas' },
+            'musica': { id: 'musica', title: 'Música', category: 'Salas' }
+        },
+        messages: {
+            'global': [
+                { id: 'm1', conversationId: 'global', role: 'ai', content: 'Olá! Sou o whatTHEO, seu assistente inteligente. Como posso ajudar hoje? Escreva @whatTHEO para me chamar.', timestamp: Date.now() - 60000 }
+            ],
+            'ideias': [
+                { id: 'm2', conversationId: 'ideias', role: 'ai', content: 'Bem-vindo à sala de Ideias. Vamos brainstormar novos projetos?', timestamp: Date.now() - 50000 }
+            ],
+            'tecnologia': [
+                { id: 'm3', conversationId: 'tecnologia', role: 'ai', content: 'Sala de Tecnologia ativa. Pergunte sobre arquitetura, código ou stacks.', timestamp: Date.now() - 40000 }
+            ],
+            'musica': [
+                { id: 'm4', conversationId: 'musica', role: 'ai', content: 'Sala de Música pronta. Fale sobre produções, acordes ou ritmos.', timestamp: Date.now() - 30000 }
+            ]
+        },
+        searchQuery: '',
+        isAiThinking: false
     };
 
-    let db, chatRef;
-    let mensagensCarregadasCache = [];
-    let isFirebaseConnected = true;
-
-    window.initApp = function() {
-        carregarPerfil();
-        initFirebase();
-    }
-
-    function initFirebase() {
+    function loadState() {
         try {
-            const app = initializeApp(firebaseConfig);
-            db = getDatabase(app);
-            chatRef = ref(db, 'mensagens_whattheo');
-            
-            onChildAdded(chatRef, (snapshot) => {
-                const msg = snapshot.val();
-                if (msg) {
-                    mensagensCarregadasCache.push(msg);
-                    renderizarMensagem(msg);
-                }
-            }, (error) => {
-                ativarModoLocal();
-            });
-            showToast("✓ whatTHEO Conectado ao Firebase RealTime");
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                appState = { ...appState, ...parsed };
+            }
         } catch (e) {
-            ativarModoLocal();
+            console.error('Erro ao carregar storage:', e);
         }
     }
 
-    function ativarModoLocal() {
-        isFirebaseConnected = false;
-        showToast("⚠ Modo local ativado (offline)");
-        document.getElementById('onlineSub').innerText = "Modo Local • Offline";
-    }
-
-    window.salvarPerfil = function() {
-        const nome = document.getElementById('userName').value.trim() || "Theo";
-        const pic = document.getElementById('userPic').value.trim() || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-        const model = document.getElementById('aiModel').value;
-        const apiKey = document.getElementById('apiKey').value.trim();
-
-        localStorage.setItem('whattheo_user_name', nome);
-        localStorage.setItem('whattheo_user_pic', pic);
-        localStorage.setItem('whattheo_ai_model', model);
-        localStorage.setItem('whattheo_api_key', apiKey);
-
-        document.getElementById('myNameDisplay').innerText = nome;
-        document.getElementById('myPicPreview').src = pic;
-
-        showToast("✓ Configurações salvas!");
-        if (window.innerWidth <= 768) toggleSidebarMobile();
-    }
-
-    function carregarPerfil() {
-        const nome = localStorage.getItem('whattheo_user_name') || "Theo";
-        const pic = localStorage.getItem('whattheo_user_pic');
-        const model = localStorage.getItem('whattheo_ai_model');
-        const apiKey = localStorage.getItem('whattheo_api_key');
-
-        document.getElementById('userName').value = nome;
-        if (pic) {
-            document.getElementById('userPic').value = pic;
-            document.getElementById('myPicPreview').src = pic;
-        }
-        if (model) document.getElementById('aiModel').value = model;
-        if (apiKey) document.getElementById('apiKey').value = apiKey;
-        document.getElementById('myNameDisplay').innerText = nome;
-    }
-
-    window.enviarMensagem = async function() {
-        const input = document.getElementById('messageInput');
-        const texto = input.value.trim();
-        if (!texto) return;
-
-        const nome = document.getElementById('userName').value.trim() || "Theo";
-        const msgObj = { autor: nome, texto: texto, tipo: "text", timestamp: Date.now(), isAI: false };
-        input.value = '';
-
-        if (isFirebaseConnected && db) {
-            try { await push(chatRef, msgObj); } catch (e) { renderizarMensagem(msgObj); }
-        } else {
-            renderizarMensagem(msgObj);
-        }
-
-        if (texto.toLowerCase().includes("@whattheo") || texto.toLowerCase().startsWith("@ia") || texto.toLowerCase().includes("assistente")) {
-            const promptLimpo = texto.replace(/@whattheo|@ia/gi, "").trim();
-            acionarIA(promptLimpo);
+    function saveState() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        } catch (e) {
+            console.error('Erro ao salvar storage:', e);
         }
     }
 
-    window.executarAcaoRapida = function(tipoAcao) {
-        let instrucao = "";
-        switch(tipoAcao) {
-            case 'resumir': instrucao = "Resuma esta conversa em 2 frases."; break;
-            case 'perguntar': instrucao = "Olá! Como você pode ajudar?"; break;
-            case 'melhorar': instrucao = "Melhore meu último texto."; break;
-            case 'ideia': instrucao = "Dê uma ideia rápida."; break;
-        }
-        acionarIA(instrucao);
+    /* ==========================================
+       UI E RENDERIZAÇÃO
+       ========================================== */
+    let userIsScrolledUp = false;
+
+    function initApp() {
+        loadState();
+        renderConversations();
+        renderMessages();
+        updateMetrics();
+        updateConnectionStatus();
+
+        const messagesContainer = document.getElementById('chatMessages');
+        messagesContainer.addEventListener('scroll', () => {
+            const threshold = 50;
+            const position = messagesContainer.scrollTop + messagesContainer.clientHeight;
+            const height = messagesContainer.scrollHeight;
+            userIsScrolledUp = height - position > threshold;
+
+            if (!userIsScrolledUp) {
+                document.getElementById('scrollDownBtn').style.display = 'none';
+            }
+        });
     }
 
-    async function acionarIA(perguntaExtra = "", imagemBase64 = null) {
-        const apiKey = document.getElementById('apiKey').value.trim();
-        const model = document.getElementById('aiModel').value;
+    function renderConversations() {
+        const list = document.getElementById('roomsList');
+        list.innerHTML = '';
 
-        if (!apiKey) {
-            showToast("⚠ Insira sua OpenRouter API Key.");
+        Object.values(appState.conversations).forEach(conv => {
+            const item = document.createElement('div');
+            item.className = `room-item ${conv.id === appState.currentConversationId ? 'active' : ''}`;
+            item.innerHTML = `
+                <span onclick="switchConversation('${conv.id}')" style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"># ${escapeHtml(conv.title)}</span>
+                ${conv.id !== 'global' && conv.id !== 'ideias' && conv.id !== 'tecnologia' && conv.id !== 'musica' ? `<button class="room-delete" onclick="deleteConversation(event, '${conv.id}')">✕</button>` : ''}
+            `;
+            list.appendChild(item);
+        });
+
+        const currentConv = appState.conversations[appState.currentConversationId];
+        if (currentConv) {
+            document.getElementById('currentChatTitle').innerText = currentConv.title;
+        }
+    }
+
+    function renderMessages() {
+        const container = document.getElementById('chatMessages');
+        container.innerHTML = '';
+
+        const msgs = appState.messages[appState.currentConversationId] || [];
+        const query = (appState.searchQuery || '').toLowerCase();
+
+        if (msgs.length === 0) {
+            container.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:var(--text-secondary); font-size:13px;">Nenhuma mensagem nesta conversa ainda.</div>`;
             return;
         }
 
-        mostrarDigitando("whatTHEO IA pensando...");
-        const contexto = obterContextoConversa();
-        const systemPrompt = "Você é o whatTHEO, um assistente IA objetivo e direto em português.";
-        
-        let promptFinal = contexto;
-        if (perguntaExtra) promptFinal += `\nPedido: ${perguntaExtra}`;
+        msgs.forEach(msg => {
+            const group = document.createElement('div');
+            const isUser = msg.role === 'user';
+            group.className = `message-group ${isUser ? 'user' : 'ai'}`;
 
-        let userContent = imagemBase64 ? [
-            { type: "text", text: promptFinal || "Analise a imagem:" },
-            { type: "image_url", image_url: { url: imagemBase64 } }
-        ] : promptFinal;
+            const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const authorName = isUser ? (appState.userName || 'Usuário') : 'whatTHEO IA';
 
-        try {
-            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${apiKey}`,
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": window.location.href,
-                    "X-Title": "whatTHEO RealTime"
-                },
-                body: JSON.stringify({
-                    model: model,
-                    max_tokens: 150, // RESTRINGE OS TOKENS PARA GASTAR MENOS CRÉDITO
-                    messages: [
-                        { role: "system", content: systemPrompt },
-                        { role: "user", content: userContent }
-                    ]
-                })
-            });
-
-            const data = await response.json();
-            esconderDigitando();
-
-            if (data.choices && data.choices.length > 0) {
-                const respostaTexto = data.choices[0].message.content;
-                const aiMsgObj = { autor: "whatTHEO IA", texto: respostaTexto, tipo: "text", timestamp: Date.now(), isAI: true };
-
-                if (isFirebaseConnected && db) {
-                    await push(chatRef, aiMsgObj);
-                } else {
-                    renderizarMensagem(aiMsgObj);
-                }
-            } else if (data.error) {
-                showToast(`⚠ Erro: ${data.error.message || 'Créditos insuficientes.'}`);
+            let contentFormatted = escapeHtml(msg.content);
+            if (query && query.trim() !== '') {
+                const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
+                contentFormatted = contentFormatted.replace(regex, '<span class="highlight-search">$1</span>');
             }
-        } catch (e) {
-            esconderDigitando();
-            showToast("⚠ Falha de conexão.");
+
+            group.innerHTML = `
+                <div class="message-header-info">
+                    <span>${authorName}</span>
+                    <span>${timeStr}</span>
+                </div>
+                <div class="message-bubble">
+                    ${contentFormatted}
+                    <div class="message-actions">
+                        <button class="msg-action-btn" onclick="copyMessage('${encodeURIComponent(msg.content)}')">Copiar</button>
+                        ${isUser ? `<button class="msg-action-btn" onclick="editMessage('${msg.id}')">Editar</button>` : `<button class="msg-action-btn" onclick="resendMessage('${msg.id}')">Reenviar</button>`}
+                    </div>
+                </div>
+            `;
+            container.appendChild(group);
+        });
+
+        if (!userIsScrolledUp) {
+            scrollToBottom(false);
         }
     }
 
-    function obterContextoConversa() {
-        const ultimas = mensagensCarregadasCache.slice(-5);
-        return "Histórico:\n" + ultimas.map(m => `${m.autor}: ${m.texto}`).join("\n");
+    function scrollToBottom(smooth = true) {
+        const container = document.getElementById('chatMessages');
+        container.scrollTo({
+            top: container.scrollHeight,
+            behavior: smooth ? 'smooth' : 'auto'
+        });
+        userIsScrolledUp = false;
+        document.getElementById('scrollDownBtn').style.display = 'none';
     }
 
-    window.renderizarMensagem = function(msg) {
-        const container = document.getElementById('messagesContainer');
-        const emptyState = document.getElementById('emptyState');
-        if (emptyState) emptyState.remove();
-
-        const meuNome = document.getElementById('userName').value.trim() || "Theo";
-        const isMe = msg.autor === meuNome && !msg.isAI;
-        const isAI = msg.isAI || msg.autor.includes("whatTHEO");
-
-        const wrapper = document.createElement('div');
-        wrapper.className = `message-wrapper ${isAI ? 'ai-message' : (isMe ? 'outgoing' : 'incoming')}`;
-
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${isAI ? 'ai' : (isMe ? 'outgoing' : 'incoming')}`;
-
-        const hora = new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        let conteudoHtml = !isMe ? `<span class="author-name">${isAI ? '🤖 whatTHEO IA' : msg.autor}</span>` : "";
-
-        if (msg.tipo === 'image') {
-            conteudoHtml += `<img src="${msg.texto}" class="msg-img">`;
-        } else if (msg.tipo === 'audio') {
-            conteudoHtml += `<audio controls src="${msg.texto}"></audio>`;
-        } else {
-            conteudoHtml += escapeHtml(msg.texto);
-        }
-
-        conteudoHtml += `<span class="time">${hora}</span>`;
-        msgDiv.innerHTML = conteudoHtml;
-        wrapper.appendChild(msgDiv);
-        container.appendChild(wrapper);
-        container.scrollTop = container.scrollHeight;
-    }
-
-    window.tratarImagem = function(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const base64Img = e.target.result;
-                const nome = document.getElementById('userName').value.trim() || "Theo";
-                const imgMsg = { autor: nome, texto: base64Img, tipo: "image", timestamp: Date.now(), isAI: false };
-                if (isFirebaseConnected && db) push(chatRef, imgMsg); else renderizarMensagem(imgMsg);
-                acionarIA("Analise esta imagem rapidamente.", base64Img);
-            }
-            reader.readAsDataURL(input.files[0]);
+    /* ==========================================
+       GERENCIAMENTO DE CONVERSAS E MENSAGENS
+       ========================================== */
+    function switchConversation(convId) {
+        appState.currentConversationId = convId;
+        appState.searchQuery = '';
+        document.getElementById('globalSearchInput').value = '';
+        saveState();
+        renderConversations();
+        renderMessages();
+        scrollToBottom(false);
+        if (window.innerWidth <= 768) {
+            toggleSidebar(false);
         }
     }
 
-    let mediaRecorder, audioChunks = [], gravando = false;
-    window.toggleGravacaoAudio = async function() {
-        const btn = document.getElementById('audioBtn');
-        if (!gravando) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const audioUrl = URL.createObjectURL(new Blob(audioChunks, { type: 'audio/webm' }));
-                    const nome = document.getElementById('userName').value.trim() || "Theo";
-                    const audioMsg = { autor: nome, texto: audioUrl, tipo: "audio", timestamp: Date.now(), isAI: false };
-                    if (isFirebaseConnected && db) push(chatRef, audioMsg); else renderizarMensagem(audioMsg);
-                };
-                mediaRecorder.start();
-                gravando = true;
-                btn.classList.add('active-record');
-                showToast("🔴 Gravando...");
-            } catch (e) { showToast("⚠ Mic negado."); }
-        } else {
-            mediaRecorder.stop();
-            gravando = false;
-            btn.classList.remove('active-record');
-        }
+    function createNewConversation() {
+        const title = prompt('Nome da nova conversa:');
+        if (!title || !title.trim()) return;
+
+        const id = 'conv_' + Date.now();
+        appState.conversations[id] = { id, title: title.trim(), category: 'Personalizadas' };
+        appState.messages[id] = [
+            { id: 'm_' + Date.now(), conversationId: id, role: 'ai', content: `Conversa "${title.trim()}" iniciada. Como posso ajudar?`, timestamp: Date.now() }
+        ];
+
+        saveState();
+        switchConversation(id);
     }
 
-    window.inserirSugestao = function(texto) {
+    function deleteConversation(event, convId) {
+        event.stopPropagation();
+        if (!confirm('Deseja realmente excluir esta conversa?')) return;
+
+        delete appState.conversations[convId];
+        delete appState.messages[convId];
+
+        if (appState.currentConversationId === convId) {
+            appState.currentConversationId = 'global';
+        }
+
+        saveState();
+        renderConversations();
+        renderMessages();
+    }
+
+    function confirmClearConversation() {
+        if (!confirm('Deseja apagar todas as mensagens desta conversa?')) return;
+        appState.messages[appState.currentConversationId] = [];
+        saveState();
+        renderMessages();
+        updateMetrics();
+    }
+
+    function sendMessage() {
         const input = document.getElementById('messageInput');
-        input.value = texto;
+        const text = input.value.trim();
+        if (!text) return;
+
+        input.value = '';
+        input.style.height = '20px';
+
+        const userMsg = {
+            id: 'msg_' + Date.now(),
+            conversationId: appState.currentConversationId,
+            role: 'user',
+            content: text,
+            timestamp: Date.now()
+        };
+
+        if (!appState.messages[appState.currentConversationId]) {
+            appState.messages[appState.currentConversationId] = [];
+        }
+
+        appState.messages[appState.currentConversationId].push(userMsg);
+        saveState();
+        renderMessages();
+        updateMetrics();
+
+        const callsAi = text.toLowerCase().includes('@whattheo');
+        if (callsAi || appState.currentConversationId !== 'global') {
+            triggerAiResponse(text, callsAi);
+        }
+    }
+
+    /* ==========================================
+       MOTOR DE IA E BACKEND
+       ========================================== */
+    async function triggerAiResponse(promptText, wasCalledExplicitly) {
+        setAiThinking(true);
+
+        const msgs = appState.messages[appState.currentConversationId] || [];
+        const payloadMessages = msgs.slice(-10).map(m => ({
+            role: m.role === 'user' ? 'user' : 'assistant',
+            content: m.content
+        }));
+
+        if (appState.apiEndpoint) {
+            try {
+                const response = await fetch(appState.apiEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: appState.aiModel || 'default',
+                        messages: payloadMessages
+                    })
+                });
+
+                if (!response.ok) throw new Error('Falha na resposta do servidor');
+
+                const data = await response.json();
+                const replyText = data.reply || data.message || (data.choices && data.choices[0]?.message?.content) || 'Resposta vazia da IA.';
+
+                appendAiMessage(replyText);
+                setAiThinking(false);
+                return;
+            } catch (err) {
+                console.warn('Erro no endpoint personalizado, usando modo demonstração local:', err);
+            }
+        }
+
+        // MODO DEMONSTRAÇÃO LOCAL INTELIGENTE
+        setTimeout(() => {
+            let demoReply = `Entendi sua solicitação sobre "${promptText}". Como assistente whatTHEO, estou processando este contexto para trazer a melhor resposta otimizada.`;
+            const lower = promptText.toLowerCase();
+
+            if (lower.includes('resumir') || lower.includes('resumo')) {
+                demoReply = 'Resumo da conversa: Os tópicos centrais abordam colaboração interativa, estruturação de interface web de alta performance e suporte a comandos contextuais.';
+            } else if (lower.includes('analisar')) {
+                demoReply = 'Análise estrutural concluída: O fluxo estável, responsivo e adaptado para armazenamento local persistente.';
+            } else if (lower.includes('ideia')) {
+                demoReply = 'Ideia sugerida: Integrar automações em tempo real utilizando WebSockets ou conectores de API modulares.';
+            } else if (lower.includes('melhorar')) {
+                demoReply = 'Sugestão de refinamento: Seja direto, utilize termos técnicos precisos e mantenha a modularidade do código.';
+            }
+
+            appendAiMessage(demoReply);
+            setAiThinking(false);
+        }, 1000);
+    }
+
+    function appendAiMessage(text) {
+        const aiMsg = {
+            id: 'ai_' + Date.now(),
+            conversationId: appState.currentConversationId,
+            role: 'ai',
+            content: text,
+            timestamp: Date.now()
+        };
+        appState.messages[appState.currentConversationId].push(aiMsg);
+        saveState();
+        renderMessages();
+        updateMetrics();
+    }
+
+    function setAiThinking(thinking) {
+        appState.isAiThinking = thinking;
+        const dot = document.getElementById('headerStatusDot');
+        const text = document.getElementById('headerStatusText');
+        const rightDot = document.getElementById('rightStatusDot');
+        const rightLabel = document.getElementById('rightStatusLabel');
+
+        if (thinking) {
+            dot.className = 'status-dot thinking';
+            text.innerText = 'whatTHEO está pensando...';
+            rightDot.className = 'status-dot thinking';
+            rightLabel.innerText = 'IA Pensando...';
+        } else {
+            dot.className = 'status-dot';
+            text.innerText = 'whatTHEO IA Pronta';
+            rightDot.className = 'status-dot';
+            rightLabel.innerText = 'IA Conectada';
+        }
+    }
+
+    /* ==========================================
+       FERRAMENTAS E AÇÕES INTELIGENTES
+       ========================================== */
+    function insertSmartAction(actionText) {
+        const input = document.getElementById('messageInput');
+        input.value = `@whatTHEO ${actionText}: `;
         input.focus();
+        autoResizeTextarea(input);
     }
 
-    window.mostrarDigitando = function(texto) {
-        document.getElementById('typingText').innerText = texto;
-        document.getElementById('typingIndicator').style.display = 'flex';
+    function runAiTool(prompt) {
+        const userMsg = {
+            id: 'msg_' + Date.now(),
+            conversationId: appState.currentConversationId,
+            role: 'user',
+            content: prompt,
+            timestamp: Date.now()
+        };
+        appState.messages[appState.currentConversationId].push(userMsg);
+        saveState();
+        renderMessages();
+        updateMetrics();
+        triggerAiResponse(prompt, true);
     }
 
-    window.esconderDigitando = function() {
-        document.getElementById('typingIndicator').style.display = 'none';
+    function updateMetrics() {
+        let totalMsgs = 0;
+        let totalAi = 0;
+
+        Object.values(appState.messages).forEach(msgs => {
+            msgs.forEach(m => {
+                totalMsgs++;
+                if (m.role === 'ai') totalAi++;
+            });
+        });
+
+        document.getElementById('msgCountMetric').innerText = totalMsgs;
+        document.getElementById('aiCountMetric').innerText = totalAi;
     }
 
-    window.toggleSidebarMobile = function() {
-        document.getElementById('sidebarPanel').classList.toggle('mobile-open');
+    function updateConnectionStatus() {
+        const modeLabel = document.getElementById('lblModeStatus');
+        const modelName = document.getElementById('lblModelName');
+
+        if (appState.apiEndpoint) {
+            modeLabel.innerText = 'API Externa Conectada';
+            modeLabel.style.color = 'var(--accent-green)';
+            modelName.innerText = appState.aiModel || 'Custom Model';
+        } else {
+            modeLabel.innerText = 'Demonstração Local';
+            modeLabel.style.color = '#eab308';
+            modelName.innerText = 'whatTHEO-Local-Demo';
+        }
     }
 
-    window.showToast = function(mensagem) {
-        const container = document.getElementById('toast-container');
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.innerText = mensagem;
-        container.appendChild(toast);
-        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+    /* ==========================================
+       RECURSOS EXTRAS (VOZ, EXPORT, BUSCA)
+       ========================================== */
+    let recognition = null;
+    let isRecording = false;
+
+    function toggleVoiceRecording() {
+        const micBtn = document.getElementById('micBtn');
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            alert('Reconhecimento de voz não suportado neste navegador.');
+            return;
+        }
+
+        if (isRecording) {
+            if (recognition) recognition.stop();
+            isRecording = false;
+            micBtn.classList.remove('recording');
+            return;
+        }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.lang = 'pt-BR';
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+            isRecording = true;
+            micBtn.classList.add('recording');
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            const input = document.getElementById('messageInput');
+            input.value += (input.value ? ' ' : '') + transcript;
+            autoResizeTextarea(input);
+        };
+
+        recognition.onerror = () => {
+            isRecording = false;
+            micBtn.classList.remove('recording');
+        };
+
+        recognition.onend = () => {
+            isRecording = false;
+            micBtn.classList.remove('recording');
+        };
+
+        recognition.start();
     }
+
+    function triggerAttachment() {
+        document.getElementById('hiddenFileInput').click();
+    }
+
+    function handleFileSelected(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const inputMsg = document.getElementById('messageInput');
+            inputMsg.value = `[Anexo enviado: ${file.name}] @whatTHEO analise este arquivo.`;
+            autoResizeTextarea(inputMsg);
+        }
+    }
+
+    function exportConversation(format) {
+        const msgs = appState.messages[appState.currentConversationId] || [];
+        const currentConv = appState.conversations[appState.currentConversationId];
+        const title = currentConv ? currentConv.title : 'chat';
+
+        let content = JSON.stringify(msgs, null, 2);
+        let mime = 'application/json';
+        let ext = 'json';
+
+        if (format === 'txt') {
+            content = msgs.map(m => `[${new Date(m.timestamp).toLocaleString()}] ${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
+            mime = 'text/plain';
+            ext = 'txt';
+        }
+
+        const blob = new Blob([content], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `whatTHEO_${title}_${Date.now()}.${ext}`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function handleGlobalSearch(query) {
+        appState.searchQuery = query;
+        renderMessages();
+    }
+
+    function copyMessage(encodedText) {
+        const text = decodeURIComponent(encodedText);
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Mensagem copiada para a área de transferência!');
+        });
+    }
+
+    function editMessage(msgId) {
+        const msgs = appState.messages[appState.currentConversationId];
+        const msg = msgs.find(m => m.id === msgId);
+        if (!msg) return;
+
+        const newText = prompt('Editar mensagem:', msg.content);
+        if (newText !== null && newText.trim() !== '') {
+            msg.content = newText.trim();
+            saveState();
+            renderMessages();
+        }
+    }
+
+    function resendMessage(msgId) {
+        const msgs = appState.messages[appState.currentConversationId];
+        const msg = msgs.find(m => m.id === msgId);
+        if (msg) {
+            triggerAiResponse(msg.content, true);
+        }
+    }
+
+    /* ==========================================
+       CONFIGURAÇÕES E MODAL
+       ========================================== */
+    function openSettingsModal() {
+        document.getElementById('configUserName').value = appState.userName || '';
+        document.getElementById('configEndpoint').value = appState.apiEndpoint || '';
+        document.getElementById('configModel').value = appState.aiModel || '';
+        document.getElementById('settingsModal').classList.add('open');
+    }
+
+    function closeSettingsModal() {
+        document.getElementById('settingsModal').classList.remove('open');
+    }
+
+    function saveSettings() {
+        appState.userName = document.getElementById('configUserName').value.trim() || 'Usuário';
+        appState.apiEndpoint = document.getElementById('configEndpoint').value.trim();
+        appState.aiModel = document.getElementById('configModel').value.trim() || 'whatTHEO-Local-Demo';
+        saveState();
+        closeSettingsModal();
+        updateConnectionStatus();
+    }
+
+    /* ==========================================
+       UTILITÁRIOS DE INTERFACE E TECLADO
+       ========================================== */
+    function toggleSidebar(open) {
+        const sidebar = document.getElementById('sidebar');
+        if (open) {
+            sidebar.classList.add('open');
+        } else {
+            sidebar.classList.remove('open');
+        }
+    }
+
+    function autoResizeTextarea(textarea) {
+        textarea.style.height = '20px';
+        textarea.style.height = (textarea.scrollHeight) + 'px';
+    }
+
+    function handleKeydown(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    }
+
+    // Atalhos globais
+    window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            document.getElementById('globalSearchInput').focus();
+        }
+        if (e.key === 'Escape') {
+            closeSettingsModal();
+            toggleSidebar(false);
+        }
+    });
 
     function escapeHtml(text) {
         const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
         return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
     window.onload = initApp;
