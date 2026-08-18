@@ -1,115 +1,234 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp AI - RealTime</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WhatstHEO - Chat RealTime</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #111b21; color: #e9edef; height: 100vh; display: flex; justify-content: center; align-items: center; }
-        .app-container { width: 100%; max-width: 900px; height: 95vh; background: #222d34; display: flex; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; }
+        html, body { background-color: #0c1317; color: #e9edef; height: 100vh; height: 100dvh; width: 100vw; overflow: hidden; position: fixed; }
         
-        .sidebar { width: 320px; background: #111b21; border-right: 1px solid #222d34; display: flex; flex-direction: column; }
-        .sidebar-header { padding: 15px; background: #202c33; display: flex; align-items: center; gap: 15px; }
-        .sidebar-header img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #555; }
-        .sidebar-body { padding: 15px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 15px; }
-        .form-group { display: flex; flex-direction: column; gap: 5px; }
-        .form-group label { font-size: 12px; color: #00a884; }
-        .form-group input, .form-group select { padding: 8px; border-radius: 5px; border: none; background: #2a3942; color: #fff; }
+        .app-container { width: 100vw; height: 100vh; height: 100dvh; background: #222d34; display: flex; position: relative; overflow: hidden; }
         
-        .chat-area { flex: 1; display: flex; flex-direction: column; background: #efeae2; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
-        .chat-header { padding: 10px 20px; background: #202c33; color: #fff; display: flex; align-items: center; justify-content: space-between; }
-        .chat-header-info { display: flex; align-items: center; gap: 15px; }
+        @media (min-width: 1400px) {
+            body { display: flex; justify-content: center; align-items: center; }
+            .app-container { height: 95vh; width: 95vw; max-width: 1600px; border-radius: 0px; box-shadow: 0 1px 1px 0 rgba(0,0,0,.06),0 2px 5px 0 rgba(0,0,0,.2); }
+        }
+
+        /* Sidebar estilo WhatsApp Web */
+        .sidebar { width: 100%; max-width: 400px; background: #111b21; border-right: 1px solid #222d34; display: flex; flex-direction: column; z-index: 10; height: 100%; position: absolute; left: 0; top: 0; transition: transform 0.3s cubic-bezier(0.1, 0.7, 0.1, 1); }
         
-        .messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .message-wrapper { display: flex; flex-direction: column; max-width: 65%; position: relative; }
+        @media (min-width: 769px) {
+            .sidebar { position: relative; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar.hidden-mobile { transform: translateX(-100%); }
+        }
+
+        .sidebar-header { padding: 10px 16px; background: #202c33; display: flex; align-items: center; justify-content: space-between; height: 60px; min-height: 60px; }
+        .user-profile { display: flex; align-items: center; gap: 15px; }
+        .user-profile img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #555; }
+        .user-profile span { font-weight: 500; font-size: 16px; color: #e9edef; }
+        
+        .sidebar-icons { display: flex; gap: 20px; color: #aebac1; font-size: 18px; cursor: pointer; }
+
+        /* Barra de Pesquisa */
+        .search-container { padding: 8px 12px; background: #111b21; display: flex; align-items: center; border-bottom: 1px solid #222d34; }
+        .search-box { flex: 1; display: flex; align-items: center; background: #202c33; border-radius: 8px; padding: 6px 12px; gap: 10px; }
+        .search-box input { background: none; border: none; color: #e9edef; font-size: 14px; outline: none; width: 100%; }
+        .search-box input::placeholder { color: #8696a0; }
+
+        .contact-list { flex: 1; overflow-y: auto; background: #111b21; }
+        .contact { display: flex; align-items: center; gap: 15px; padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #222d34; transition: background 0.2s; }
+        .contact:hover { background: #202c33; }
+        .contact.active { background: #2a3942; }
+        .contact img { width: 49px; height: 49px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .contact-info { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; }
+        .contact-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .contact-name { font-size: 16px; color: #e9edef; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .contact-time { font-size: 12px; color: #8696a0; flex-shrink: 0; }
+        .contact-status { font-size: 13px; color: #8696a0; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Painel de Configurações flutuantes */
+        .settings-btn { background: none; border: none; color: #aebac1; cursor: pointer; font-size: 20px; }
+        .settings-panel { display: none; position: absolute; top: 60px; left: 10px; width: calc(100% - 20px); max-width: 380px; background: #233138; border: 1px solid #222d34; border-radius: 8px; z-index: 100; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+        .settings-panel.open { display: block; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+        .form-group label { font-size: 11px; color: #00a884; font-weight: bold; }
+        .form-group input, .form-group select { padding: 8px; border-radius: 4px; border: none; background: #2a3942; color: #fff; font-size: 13px; outline: none; width: 100%; }
+        .btn-save { padding: 8px; background: #00a884; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; margin-top: 5px; }
+
+        /* Área de Chat Principal */
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: #efeae2; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); height: 100%; width: 100%; position: relative; }
+        
+        .chat-header { padding: 10px 16px; background: #202c33; color: #fff; display: flex; align-items: center; justify-content: space-between; height: 60px; min-height: 60px; z-index: 1; border-left: 1px solid #222d34; }
+        .chat-header-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .chat-header-info img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .chat-header-text { min-width: 0; }
+        .chat-header-text h3 { font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-header-text small { color: #8696a0; font-size: 12px; display: block; }
+
+        .messages-container { flex: 1; padding: 20px 5%; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; -webkit-overflow-scrolling: touch; }
+        
+        @media (min-width: 769px) {
+            .messages-container { padding: 20px 7%; }
+        }
+
+        .message-wrapper { display: flex; flex-direction: column; max-width: 75%; position: relative; margin-bottom: 2px; }
+        @media (min-width: 769px) {
+            .message-wrapper { max-width: 65%; }
+        }
+        
         .message-wrapper.incoming { align-self: flex-start; }
         .message-wrapper.outgoing { align-self: flex-end; }
         
-        .message { padding: 8px 12px; border-radius: 7.5px; font-size: 14px; word-wrap: break-word; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); color: #111; }
+        .message { padding: 6px 7px 8px 9px; border-radius: 7.5px; font-size: 14.2px; word-wrap: break-word; overflow-wrap: break-word; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); color: #111; line-height: 19px; position: relative; }
         .message.incoming { background: #fff; border-top-left-radius: 0; }
         .message.outgoing { background: #d9fdd3; border-top-right-radius: 0; }
-        .message .time { font-size: 10px; color: #666; float: right; margin-left: 10px; margin-top: 5px; }
+        .message.ai-bubble { background: #f0f2f5; border-top-left-radius: 0; border: 1px solid #d1d7db; }
+        .message .author-name { font-size: 12.5px; font-weight: bold; color: #005c4b; margin-bottom: 2px; display: block; }
+        .message.ai-bubble .author-name { color: #027eb5; }
+        .message .time { font-size: 11px; color: #667781; float: right; margin-left: 15px; margin-top: 4px; line-height: 15px; }
 
-        .chat-input-area { padding: 10px 20px; background: #202c33; display: flex; align-items: center; gap: 10px; }
-        .chat-input-area input[type="text"] { flex: 1; padding: 10px 15px; border-radius: 8px; border: none; background: #2a3942; color: #fff; outline: none; }
-        .btn-action { background: none; border: none; color: #8696a0; font-size: 20px; cursor: pointer; }
+        /* Barra de Entrada / Input */
+        .chat-input-area { padding: 10px 16px; background: #202c33; display: flex; align-items: center; gap: 10px; min-height: 62px; width: 100%; }
+        .chat-input-area input[type="text"] { flex: 1; padding: 12px 16px; border-radius: 8px; border: none; background: #2a3942; color: #fff; outline: none; font-size: 15px; min-width: 0; }
+        .chat-input-area input[type="text"]::placeholder { color: #8696a0; }
+        .btn-action { background: none; border: none; color: #8696a0; font-size: 22px; cursor: pointer; padding: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .btn-action:hover { color: #00a884; }
-        
-        .ai-suggestions { padding: 10px 20px; background: #111b21; display: flex; gap: 10px; overflow-x: auto; border-top: 1px solid #222d34; }
-        .suggestion-chip { background: #202c33; color: #00a884; border: 1px solid #00a884; padding: 5px 10px; border-radius: 15px; font-size: 12px; cursor: pointer; white-space: nowrap; }
-        .suggestion-chip:hover { background: #00a884; color: #fff; }
+
+        /* Botão Voltar mobile */
+        .back-to-menu { display: none; background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; padding: 0; flex-shrink: 0; }
+        @media (max-width: 768px) {
+            .back-to-menu { display: flex; align-items: center; justify-content: center; }
+        }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="sidebar">
+    <!-- Painel Lateral / Contatos -->
+    <div class="sidebar" id="sidebarPanel">
         <div class="sidebar-header">
-            <img id="myPicPreview" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Perfil">
-            <div>
-                <h4 id="myNameDisplay">Meu Perfil</h4>
-                <small style="color: #8696a0;">Conectado</small>
+            <div class="user-profile">
+                <img id="myPicPreview" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Perfil">
+                <span id="myNameDisplay">HEO User</span>
+            </div>
+            <div class="sidebar-icons">
+                <button class="settings-btn" onclick="toggleSettings()" title="Configurações e Perfil">⚙️</button>
             </div>
         </div>
-        <div class="sidebar-body">
+
+        <!-- Painel flutuante de Configurações -->
+        <div class="settings-panel" id="settingsPanel">
             <div class="form-group">
-                <label>Chave OpenRouter API (Opcional)</label>
+                <label>Seu Nome</label>
+                <input type="text" id="userName" value="HEO User" placeholder="Seu nome">
+            </div>
+            <div class="form-group">
+                <label>Sua Foto (URL)</label>
+                <input type="text" id="userPic" value="https://cdn-icons-png.flaticon.com/512/149/149071.png" placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label>OpenRouter API Key</label>
                 <input type="password" id="apiKey" placeholder="sk-or-v1-...">
             </div>
             <div class="form-group">
-                <label>Seu Nome</label>
-                <input type="text" id="userName" value="Visitante" placeholder="Seu nome">
-            </div>
-            <div class="form-group">
-                <label>Foto de Perfil (URL)</label>
-                <input type="text" id="userPic" value="https://cdn-icons-png.flaticon.com/512/149/149071.png">
-            </div>
-            <div class="form-group">
-                <label>Modelo da IA</label>
+                <label>Modelo IA</label>
                 <select id="aiModel">
-                    <option value="meta-llama/llama-3-8b-instruct:free">Llama 3 8B (Gratuito)</option>
                     <option value="deepseek/deepseek-chat">DeepSeek V3</option>
+                    <option value="meta-llama/llama-3-8b-instruct:free">Llama 3 8B Free</option>
+                    <option value="google/gemini-flash-1.5">Gemini Flash 1.5</option>
                 </select>
             </div>
-            <button onclick="salvarPerfil()" style="padding: 10px; background: #00a884; color: #fff; border:none; border-radius: 5px; cursor: pointer; font-weight: bold;">Salvar Configurações</button>
+            <button class="btn-save" onclick="salvarPerfil()">Salvar Configurações</button>
+        </div>
+
+        <div class="search-container">
+            <div class="search-box">
+                <span style="color: #8696a0; font-size: 14px;">🔍</span>
+                <input type="text" placeholder="Pesquisar ou começar uma nova conversa">
+            </div>
+        </div>
+
+        <div class="contact-list" id="contactList">
+            <div class="contact active" onclick="selecionarConversa()">
+                <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" alt="WhatstHEO AI">
+                <div class="contact-info">
+                    <div class="contact-row">
+                        <span class="contact-name">WhatstHEO & IA Global</span>
+                        <span class="contact-time">Agora</span>
+                    </div>
+                    <span class="contact-status">Toque para interagir com a IA no chat</span>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Área Principal de Conversa -->
     <div class="chat-area">
         <div class="chat-header">
             <div class="chat-header-info">
-                <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" style="width:40px; height:40px; border-radius:50%;">
-                <div>
-                    <h3 id="chatTitle">Chat Global & IA</h3>
-                    <small style="color: #00a884;">online</small>
+                <button class="back-to-menu" onclick="toggleSidebar()">⬅</button>
+                <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" alt="WhatstHEO">
+                <div class="chat-header-text">
+                    <h3 id="chatTitle">WhatstHEO Global & IA</h3>
+                    <small>online • IA integrada ativa</small>
                 </div>
             </div>
         </div>
 
         <div class="messages-container" id="messagesContainer"></div>
 
-        <div class="ai-suggestions" id="aiSuggestions">
-            <div class="suggestion-chip" onclick="usarSugestao('Olá pessoal, tudo bem?')">👋 Olá pessoal</div>
-            <div class="suggestion-chip" onclick="usarSugestao('Pode me ajudar com uma correção de texto?')">✍️ Corrigir texto</div>
-            <div class="suggestion-chip" onclick="usarSugestao('Me dê dicas de escrita criativa.')">💡 Dicas de escrita</div>
-        </div>
-
         <div class="chat-input-area">
-            <button class="btn-action" title="Enviar Imagem" onclick="enviarMidia('imagem')">📷</button>
-            <button class="btn-action" title="Enviar Áudio" onclick="enviarMidia('audio')">🎤</button>
-            <input type="text" id="messageInput" placeholder="Digite uma mensagem..." onkeypress="if(event.key === 'Enter') enviarMensagem()">
-            <button class="btn-action" title="Enviar" onclick="enviarMensagem()">➤</button>
+            <input type="text" id="messageInput" placeholder="Digite uma mensagem (a IA interage automaticamente)..." onkeypress="if(event.key === 'Enter') enviarMensagem()">
+            <button class="btn-action" title="Enviar" onclick="enviarMensagem()" style="color: #00a884; font-size: 24px;">➤</button>
         </div>
     </div>
 </div>
+
+<script>
+    function tocarSomNotificacao() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.15);
+        } catch (e) {
+            console.log("Áudio aguardando interação.");
+        }
+    }
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebarPanel');
+        sidebar.classList.toggle('hidden-mobile');
+    }
+
+    function selecionarConversa() {
+        if (window.innerWidth <= 768) {
+            toggleSidebar();
+        }
+    }
+
+    function toggleSettings() {
+        const panel = document.getElementById('settingsPanel');
+        panel.classList.toggle('open');
+    }
+</script>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // --- CHAVES DO FIREBASE JÁ INCLUÍDAS ---
     const firebaseConfig = {
         apiKey: "AIzaSyQgKBcblzkneOqTyt-qpD0U85iqFG076k",
         authDomain: "chatapp-c7bb1.firebaseapp.com",
@@ -119,40 +238,70 @@
         messagingSenderId: "463389637554",
         appId: "1:463389637554:web:e2657bc2287391dbc442ab"
     };
-    // ---------------------------------------------
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const chatRef = ref(db, 'mensagens');
 
-    let primeiraMensagemEnviada = false;
+    let historicoMensagensCache = [];
+    let primeiraCarga = false;
 
     window.salvarPerfil = function() {
-        const name = document.getElementById('userName').value;
-        const pic = document.getElementById('userPic').value;
+        const name = document.getElementById('userName').value.trim();
+        const pic = document.getElementById('userPic').value.trim();
+        if (!name) return alert("Insira um nome válido.");
+
         document.getElementById('myNameDisplay').innerText = name;
-        document.getElementById('myPicPreview').src = pic;
-        alert("Perfil salvo!");
+        if(pic) document.getElementById('myPicPreview').src = pic;
+
+        localStorage.setItem('whatstheo_name', name);
+        localStorage.setItem('whatstheo_pic', pic);
+        localStorage.setItem('whatstheo_key', document.getElementById('apiKey').value.trim());
+        localStorage.setItem('whatstheo_model', document.getElementById('aiModel').value);
+
+        toggleSettings();
     }
 
-    window.usarSugestao = function(texto) {
-        document.getElementById('messageInput').value = texto;
-    }
+    window.addEventListener('DOMContentLoaded', () => {
+        const savedName = localStorage.getItem('whatstheo_name');
+        const savedPic = localStorage.getItem('whatstheo_pic');
+        const savedKey = localStorage.getItem('whatstheo_key');
+        const savedModel = localStorage.getItem('whatstheo_model');
+
+        if (savedName) {
+            document.getElementById('userName').value = savedName;
+            document.getElementById('myNameDisplay').innerText = savedName;
+        }
+        if (savedPic) {
+            document.getElementById('userPic').value = savedPic;
+            document.getElementById('myPicPreview').src = savedPic;
+        }
+        if (savedKey) document.getElementById('apiKey').value = savedKey;
+        if (savedModel) document.getElementById('aiModel').value = savedModel;
+    });
 
     window.enviarMensagem = async function() {
         const input = document.getElementById('messageInput');
-        const apiKey = document.getElementById('apiKey').value;
-        const model = document.getElementById('aiModel').value;
-        const nome = document.getElementById('userName').value;
         const texto = input.value.trim();
+        const nome = document.getElementById('userName').value.trim() || "HEO User";
+        const apiKey = document.getElementById('apiKey').value.trim();
+        const model = document.getElementById('aiModel').value;
 
         if (!texto) return;
 
-        push(chatRef, { autor: nome, texto: texto });
+        await push(chatRef, {
+            autor: nome,
+            texto: texto,
+            timestamp: Date.now(),
+            isAI: false
+        });
+
         input.value = '';
 
         if (apiKey) {
             try {
+                let contextoConversa = "Histórico do chat WhatstHEO:\n" + historicoMensagensCache.slice(-12).map(m => `${m.autor}: ${m.texto}`).join("\n");
+                
                 const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                     method: "POST",
                     headers: {
@@ -162,51 +311,70 @@
                     body: JSON.stringify({
                         "model": model,
                         "messages": [
-                            {"role": "system", "content": "Você é uma IA assistente prestativa em um chat em grupo."},
-                            {"role": "user", "content": texto}
+                            {
+                                "role": "system", 
+                                "content": "Você é o assistente inteligente WhatstHEO. Você participa ativamente do chat global em tempo real, respondendo de forma natural, prestativa e amigável, criando frases fluidas baseadas no que as pessoas estão conversando."
+                            },
+                            {
+                                "role": "user", 
+                                "content": `${contextoConversa}\n\nEscreva sua resposta de forma natural na conversa:`
+                            }
                         ]
                     })
                 });
+
                 const data = await res.json();
                 if (data.choices && data.choices.length > 0) {
                     const respostaAI = data.choices[0].message.content;
-                    push(chatRef, { autor: "Assistente IA", texto: respostaAI });
+                    
+                    await push(chatRef, {
+                        autor: "WhatstHEO IA",
+                        texto: respostaAI,
+                        timestamp: Date.now(),
+                        isAI: true
+                    });
                 }
             } catch (e) {
-                console.error("Erro ao chamar IA");
+                console.error("Erro ao interagir com a IA:", e);
             }
         }
     }
 
-    window.enviarMidia = function(tipoMidia) {
-        const nome = document.getElementById('userName').value;
-        const texto = tipoMidia === 'imagem' ? "📷 [Imagem enviada]" : "🎤 [Áudio gravado]";
-        push(chatRef, { autor: nome, texto: texto });
-    }
+    onChildAdded(chatRef, (snapshot) => {
+        const msg = snapshot.val();
+        if (!msg) return;
 
-    onChildAdded(chatRef, (data) => {
-        if (!primeiraMensagemEnviada) {
-            document.getElementById('messagesContainer').style.display = 'flex';
-            primeiraMensagemEnviada = true;
-        }
+        historicoMensagensCache.push(msg);
 
-        const msg = data.val();
         const container = document.getElementById('messagesContainer');
         const wrapper = document.createElement('div');
-        
-        const meuNome = document.getElementById('userName').value;
-        const isMe = msg.autor === meuNome;
-        wrapper.className = `message-wrapper ${isMe ? 'outgoing' : 'incoming'}`;
-        
+
+        const meuNome = document.getElementById('userName').value.trim() || "HEO User";
+        const isMe = msg.autor === meuNome && !msg.isAI;
+        const isAI = msg.isAI || msg.autor === "WhatstHEO IA";
+
+        wrapper.className = `message-wrapper ${isAI ? 'incoming' : (isMe ? 'outgoing' : 'incoming')}`;
+
         const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${isMe ? 'outgoing' : 'incoming'}`;
-        
-        const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        msgDiv.innerHTML = `<b>${msg.autor}</b><br>${msg.texto} <span class="time">${hora}</span>`;
+        msgDiv.className = `message ${isAI ? 'ai-bubble' : (isMe ? 'outgoing' : 'incoming')}`;
+
+        const hora = new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        let conteudo = "";
+        if (!isMe) {
+            conteudo += `<span class="author-name">${isAI ? '🤖 WhatstHEO IA' : msg.autor}</span>`;
+        }
+        conteudo += `${msg.texto} <span class="time">${hora}</span>`;
+
+        msgDiv.innerHTML = conteudo;
         wrapper.appendChild(msgDiv);
         container.appendChild(wrapper);
         container.scrollTop = container.scrollHeight;
+
+        if (primeiraCarga && !isMe) {
+            tocarSomNotificacao();
+        }
+        primeiraCarga = true;
     });
 </script>
 
